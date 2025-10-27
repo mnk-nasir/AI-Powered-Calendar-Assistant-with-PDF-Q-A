@@ -120,3 +120,42 @@ def book_appointment(user_name, user_email, start_time):
     return res.json()
 
 def run_calendar_assistant(prompt: str):
+    if cfg.mock:
+        return "[MOCK] Booked meeting for user@example.com at 10:00 tomorrow."
+    client = OpenAI(api_key=cfg.OPENAI_API_KEY)
+    instruction = (
+        "You are a courteous scheduling assistant. "
+        "If the message requests a meeting, extract name, email, and time, then book via API."
+    )
+    res = client.chat.completions.create(model="gpt-4o-mini",
+                                         messages=[{"role": "system", "content": instruction},
+                                                   {"role": "user", "content": prompt}])
+    return res.choices[0].message.content
+
+# ---------- MAIN WORKFLOW ----------
+def main():
+    log.info("🚀 Starting AI Demo Multifunction")
+
+    # 1️⃣ Email classification demo
+    classification = classify_email("Workflow automation idea", "Let's automate n8n setup.")
+    log.info(f"Classified as: {classification['category']}")
+    label_email(classification["category"])
+
+    # 2️⃣ Slack demo
+    send_slack_message("test@n8n.io")
+
+    # 3️⃣ PDF RAG demo
+    pdf = download_pdf("https://bitcoin.org/bitcoin.pdf")
+    embed_pdf_to_pinecone(pdf)
+    answer = query_pdf("What problem does the Bitcoin whitepaper solve?")
+    log.info(f"PDF Answer: {answer}")
+
+    # 4️⃣ Appointment assistant demo
+    result = run_calendar_assistant("Can I meet Max next Tuesday at 10am?")
+    log.info(f"Assistant result: {result}")
+
+    log.info("✅ Workflow finished successfully.")
+
+
+if __name__ == "__main__":
+    main()
